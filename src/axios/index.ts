@@ -1,6 +1,7 @@
 import { nanoid } from "../index";
 import axios, { AxiosError } from "axios";
 import type {
+  AxiosInstance,
   AxiosResponse,
   CreateAxiosDefaults,
   InternalAxiosRequestConfig,
@@ -169,4 +170,4 @@ export function createFlatRequest<
   return flatRequest;
 }
 export { BACKEND_ERROR_CODE, REQUEST_ID_KEY };
-export type { AxiosError, CreateAxiosDefaults };
+export type { AxiosError, CreateAxiosDefaults, AxiosInstance, AxiosResponse };
