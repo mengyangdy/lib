@@ -22,47 +22,57 @@ type DebouncedFunction<T extends (...args: any[]) => any, TThis = unknown> = (
   cancel: () => void;
 };
 
-export function Debounce< T extends (...args: any[]) => any,TThis = unknown>(fn:T, delay:number, immediate:boolean = false, resultCallback?:(result: ReturnType<T>) => void): DebouncedFunction<T,TThis> {
+export function Debounce<T extends (...args: any[]) => any, TThis = unknown>(
+  fn: T,
+  delay: number,
+  immediate: boolean = false,
+  resultCallback?: (result: ReturnType<T>) => void
+): DebouncedFunction<T, TThis> {
   // 用于记录上一次事件触发的timer
-  let timer: NodeJS.Timeout | null = null
-  let isInvoke = false
+  let timer: NodeJS.Timeout | null = null;
+  let isInvoke = false;
   // 触发事件时执行的函数
-  const _debounce = function (this: TThis,...args: Parameters<T>):Promise<ReturnType<T>> {
+  const _debounce = function (
+    this: TThis,
+    ...args: Parameters<T>
+  ): Promise<ReturnType<T>> {
     return new Promise((resolve, reject) => {
       try {
         // 多次触发事件 取消上一次的事件
-        if (timer) clearTimeout(timer)
+        if (timer) clearTimeout(timer);
 
-        let res: ReturnType<T>
+        let res: ReturnType<T>;
 
         // 立即执行
         if (immediate && !isInvoke) {
-          res = fn.apply(this, args)
-          if (resultCallback && res !== undefined) resultCallback(res)
-          resolve(res)
-          isInvoke = true
-          return
+          res = fn.apply(this, args);
+          if (resultCallback && res !== undefined) resultCallback(res);
+          resolve(res);
+          isInvoke = true;
+          return;
         }
 
         // 延迟执行对应的fn函数
         timer = setTimeout(() => {
-          res = fn.apply(this, args)
-          if (resultCallback && res !== undefined) resultCallback(res)
-          resolve(res)
-          timer = null
-        }, delay)
+          res = fn.apply(this, args);
+          if (resultCallback && res !== undefined) resultCallback(res);
+          resolve(res);
+          timer = null;
+        }, delay);
       } catch (error) {
-        reject(error)
+        reject(error);
       }
-    })
-  } as DebouncedFunction<T, TThis>;
+    });
+  };
 
-  // 取消功能实现
-  _debounce.cancel = function (this: DebouncedFunction<T, TThis>):void {
-    if (timer) clearTimeout(timer)
-    timer = null
-    isInvoke = false
-  }
+  // 用 Object.assign 合并 cancel 属性
+  const debouncedWithCancel = Object.assign(_debounce, {
+    cancel: function (this: DebouncedFunction<T, TThis>): void {
+      if (timer) clearTimeout(timer);
+      timer = null;
+      isInvoke = false;
+    },
+  }) as unknown as DebouncedFunction<T, TThis>;
 
-  return _debounce
+  return debouncedWithCancel;
 }

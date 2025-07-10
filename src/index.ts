@@ -8,3 +8,6 @@ export * from "./color";
 export * from "./uno-preset";
 export * from "./nanoid";
 export * from "./axios";
+export * from "./fetch";
+export * from "./debounce";
+export * from "./throttle";
