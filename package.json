@@ -15,8 +15,7 @@
     "dist"
   ],
   "scripts": {
-    "build": "unbuild",
-    "dev": "unbuild --stub",
+    "build": "tsdown",
     "typecheck": "tsc --noEmit --skipLibCheck",
     "cm": "git add . && dy git-commit",
     "publish-pkg": "npm publish --access public",
@@ -24,10 +23,11 @@
   },
   "packageManager": "pnpm@10.10.0",
   "devDependencies": {
+    "@dylanjs/cli": "^1.0.4",
     "@types/node": "^22.15.3",
     "@types/qs": "^6.9.18",
-    "typescript": "^5.8.3",
-    "unbuild": "^3.5.0"
+    "tsdown": "^0.12.9",
+    "typescript": "^5.8.3"
   },
   "dependencies": {
     "@unocss/core": "^66.3.2",
