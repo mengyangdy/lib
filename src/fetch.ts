@@ -72,7 +72,7 @@ export interface RequestFetchInstance {
  * // 通用用法
  * request({ url: '/api/user', method: 'GET', params: { id: 1 } }).then(res => { ... });
  */
-export const request: RequestFetchInstance = function request(
+export const fetchRequest: RequestFetchInstance = function request(
   config: RequestConfig
 ): RequestResponse<any> {
   if (!isObject(config)) config = {};
@@ -168,19 +168,19 @@ export const request: RequestFetchInstance = function request(
 
 // 快捷方法类型补全
 (["GET", "HEAD", "DELETE", "OPTIONS"] as const).forEach((item) => {
-  (request as any)[item.toLowerCase()] = function <T = any>(
+  (fetchRequest as any)[item.toLowerCase()] = function <T = any>(
     url: string,
     config: RequestConfig = {}
   ): RequestResponse<T> {
     if (!isObject(config)) config = {};
     config["url"] = url;
     config["method"] = item;
-    return request(config);
+    return fetchRequest(config);
   };
 });
 
 (["POST", "PUT", "PATCH"] as const).forEach((item) => {
-  (request as any)[item.toLowerCase()] = function <T = any>(
+  (fetchRequest as any)[item.toLowerCase()] = function <T = any>(
     url: string,
     body?: any,
     config: RequestConfig = {}
@@ -189,6 +189,6 @@ export const request: RequestFetchInstance = function request(
     config["url"] = url;
     config["method"] = item;
     config["body"] = body;
-    return request(config);
+    return fetchRequest(config);
   };
 });
