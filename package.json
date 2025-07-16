@@ -1,6 +1,6 @@
 {
   "name": "@dylanjs/utils",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
@@ -17,7 +17,7 @@
   "scripts": {
     "build": "tsdown",
     "typecheck": "tsc --noEmit --skipLibCheck",
-    "cm": "git add . && dy git-commit",
+    "cm": "git add . && dy git-commit -l=zh-cn",
     "publish-pkg": "npm publish --access public",
     "release": "git add . && dy release && pnpm build && pnpm publish-pkg"
   },
