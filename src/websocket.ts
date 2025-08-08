@@ -2,44 +2,28 @@ export type WebSocketStatus = "OPEN" | "CONNECTING" | "CLOSED";
 export type WebSocketHeartbeatMessage = string | ArrayBuffer | Blob;
 
 export interface WebSocketClientOptions {
-  // 握手成功
   onConnected?: (ws: WebSocket) => void;
-  // 断开连接
   onDisconnected?: (ws: WebSocket, ev: CloseEvent) => void;
-  // 错误
   onError?: (ws: WebSocket, ev: Event) => void;
-  // 后端发送的消息
   onMessage?: (ws: WebSocket, ev: MessageEvent) => void;
-  // 心跳保活
   heartbeat?:
     | false
     | {
-        // 要发的心跳消息
         message?: WebSocketHeartbeatMessage; // default: 'ping'
-        // 心跳响应消息
         responseMessage?: WebSocketHeartbeatMessage; // default: message
-        // 心跳间隔
         interval?: number; // ms, default: 1000
-        // 心跳超时时间
         pongTimeout?: number; // ms, default: 1000
       };
-  // 自动重连
   autoReconnect?:
     | false
     | {
-        // 最大尝试次数
         retries?: number | ((retries: number) => boolean); // default: ∞
-        // 重连间隔
         delay?: number; // ms, default: 1000
-        // 重连失败
         onFailed?: () => void;
       };
-  // 创建实例后立即连接 设为false时得手动client.open
-  immediate?: boolean; // open() upon instantiation, default: true
-  //WebSocket 子协议列表，等同浏览器原生 new WebSocket(url, protocols) 第二参数。常见如 ['graphql-ws']、['json']
-  protocols?: string[]; // WebSocket sub‑protocols
-  // 是否缓存未发送的消息
-  buffer?: boolean; // store unsent msgs when not OPEN, default: true
+  immediate?: boolean; // default: true
+  protocols?: string[];
+  buffer?: boolean; // default: true
 }
 
 export class WebSocketClient {
@@ -63,18 +47,15 @@ export class WebSocketClient {
     return true;
   }
 
+  /** 手动关闭连接（不会再重连） */
   close(code = 1000, reason?: string) {
-    this.stopRetry();
-    this.stopHeartbeat();
-    this.explicitlyClosed = true;
-    this.ws?.close(code, reason);
-    this.ws = undefined;
-    this.status.value = "CLOSED";
+    this.doClose(true, code, reason);
   }
 
+  /** 重新连接（内部调用，允许重连） */
   open() {
-    if (this.explicitlyClosed) this.explicitlyClosed = false;
-    this.close();
+    this.explicitlyClosed = false;
+    if (this.ws) this.doClose(false, 1000); // 内部关闭，不设explicitlyClosed
     this.init();
   }
 
@@ -85,6 +66,17 @@ export class WebSocketClient {
   private retryTimer?: ReturnType<typeof setTimeout>;
   private hbTimer?: ReturnType<typeof setInterval>;
   private pongTimer?: ReturnType<typeof setTimeout>;
+  private heartbeatExpect?: WebSocketHeartbeatMessage;
+
+  /** 统一关闭方法 */
+  private doClose(isExplicit: boolean, code = 1000, reason?: string) {
+    this.stopRetry();
+    this.stopHeartbeat();
+    if (isExplicit) this.explicitlyClosed = true;
+    this.ws?.close(code, reason);
+    this.ws = undefined;
+    this.status.value = "CLOSED";
+  }
 
   private init() {
     const {
@@ -94,6 +86,7 @@ export class WebSocketClient {
       onMessage,
       onDisconnected,
     } = this.options;
+
     this.ws = new WebSocket(this.url, protocols);
     this.status.value = "CONNECTING";
 
@@ -117,7 +110,7 @@ export class WebSocketClient {
       this.status.value = "CLOSED";
       this.stopHeartbeat();
       onDisconnected?.(this.ws!, ev);
-      this.maybeReconnect();
+      this.maybeReconnect(ev);
     };
   }
 
@@ -140,8 +133,10 @@ export class WebSocketClient {
 
     this.hbTimer = setInterval(() => {
       this.send(message, false);
-      this.pongTimer ??= setTimeout(() => {
-        this.close(); // triggers auto‑reconnect if enabled
+      // 每次发心跳后开一个定时器等 pong
+      this.pongTimer = setTimeout(() => {
+        // 超时算连接异常 → 内部关闭，触发重连
+        this.doClose(false);
       }, pongTimeout);
     }, interval);
 
@@ -154,7 +149,6 @@ export class WebSocketClient {
     this.hbTimer = this.pongTimer = undefined;
   }
 
-  private heartbeatExpect?: WebSocketHeartbeatMessage;
   private handleHeartbeatMsg(e: MessageEvent) {
     if (!this.options.heartbeat) return false;
     if (e.data === this.heartbeatExpect) {
@@ -165,12 +159,14 @@ export class WebSocketClient {
     return false;
   }
 
-  private maybeReconnect() {
+  private maybeReconnect(ev: CloseEvent) {
     const ar = this.options.autoReconnect;
     if (!ar || this.explicitlyClosed) return;
 
-    const { retries = -1, delay = 1000, onFailed } = ar;
+    // 只对异常关闭进行重连，1000 是正常关闭
+    if (ev.code === 1000) return;
 
+    const { retries = -1, delay = 1000, onFailed } = ar;
     const shouldRetry =
       typeof retries === "function"
         ? retries(this.retries)

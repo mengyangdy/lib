@@ -15,3 +15,12 @@ export function isPC() {
   ];
   return !agents.includes(window.navigator.userAgent);
 }
+export function isFunction(value: unknown): value is (...args: any) => any {
+  return typeof value === "function";
+}
+
+export const isBrowser = Boolean(
+  typeof window !== "undefined" &&
+    window.document &&
+    window.document.createElement
+);
