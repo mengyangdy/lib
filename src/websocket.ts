@@ -133,10 +133,9 @@ export class WebSocketClient {
 
     this.hbTimer = setInterval(() => {
       this.send(message, false);
-      // 每次发心跳后开一个定时器等 pong
       this.pongTimer = setTimeout(() => {
-        // 超时算连接异常 → 内部关闭，触发重连
-        this.doClose(false);
+        console.log("心跳超时，准备重连");
+        this.ws?.close(1006, "heartbeat timeout");
       }, pongTimeout);
     }, interval);
 
@@ -163,10 +162,10 @@ export class WebSocketClient {
     const ar = this.options.autoReconnect;
     if (!ar || this.explicitlyClosed) return;
 
-    // 只对异常关闭进行重连，1000 是正常关闭
-    if (ev.code === 1000) return;
+    // 心跳超时等异常关闭要重连
+    if (ev.code === 1000 && !this.explicitlyClosed) return;
 
-    const { retries = -1, delay = 1000, onFailed } = ar;
+    const { retries = -1, delay = 2000, onFailed } = ar;
     const shouldRetry =
       typeof retries === "function"
         ? retries(this.retries)
@@ -174,8 +173,13 @@ export class WebSocketClient {
 
     if (shouldRetry) {
       this.retries++;
-      this.retryTimer = setTimeout(() => this.init(), delay);
+      console.log(`第 ${this.retries} 次重连，等待 ${delay}ms...`);
+      this.retryTimer = setTimeout(() => {
+        console.log("开始重连...");
+        this.init();
+      }, delay);
     } else {
+      console.log("重连失败，已达最大次数");
       onFailed?.();
     }
   }
