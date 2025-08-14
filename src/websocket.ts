@@ -61,6 +61,7 @@ export class WebSocketClient {
 
   private ws?: WebSocket;
   private buffered: (string | ArrayBuffer | Blob)[] = [];
+  // 手动关闭为true 异常关闭为false
   private explicitlyClosed = false;
   private retries = 0;
   private retryTimer?: ReturnType<typeof setTimeout>;
@@ -135,7 +136,7 @@ export class WebSocketClient {
       this.send(message, false);
       this.pongTimer = setTimeout(() => {
         console.log("心跳超时，准备重连");
-        this.ws?.close(1006, "heartbeat timeout");
+        this.ws?.close(3001, "heartbeat timeout");
       }, pongTimeout);
     }, interval);
 
