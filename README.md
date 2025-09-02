@@ -169,12 +169,41 @@ const exists = storage.has("user");
 提供各种类型判断函数。
 
 ```typescript
-import { isObject, isArray, isString, isNumber } from "@dylanjs/utils";
+import {
+  isObject,
+  isArray,
+  isString,
+  isNumber,
+  isBoolean,
+  isFunction,
+  isDate,
+  isMap,
+  isSet,
+  isPromise,
+  isWindow,
+  isBrowser,
+  isIOS,
+  isPC,
+  isClient,
+  hasOwn,
+} from "@dylanjs/utils";
 
 isObject({}); // true
 isArray([1, 2, 3]); // true
 isString("hello"); // true
 isNumber(123); // true
+isBoolean(true); // true
+isFunction(() => {}); // true
+isDate(new Date()); // true
+isMap(new Map()); // true
+isSet(new Set()); // true
+isPromise(Promise.resolve()); // true
+isWindow(window); // true
+isBrowser(); // true
+isIOS(); // true/false
+isPC(); // true/false
+isClient(); // true/false
+hasOwn({ a: 1 }, "a"); // true
 ```
 
 ### 6. 深拷贝 (cloneDeep)
@@ -193,24 +222,7 @@ const cloned = cloneDeep(original);
 // cloned 是 original 的深拷贝，修改不会影响原对象
 ```
 
-### 7. 用户代理 (agent)
-
-获取浏览器和系统信息。
-
-```typescript
-import { agent } from "@dylanjs/utils";
-
-// 获取浏览器信息
-console.log(agent.browser); // { name: 'Chrome', version: '91.0.4472.124' }
-
-// 获取操作系统信息
-console.log(agent.os); // { name: 'Windows', version: '10' }
-
-// 获取设备信息
-console.log(agent.device); // { type: 'desktop', mobile: false }
-```
-
-### 8. 颜色工具 (color)
+### 7. 颜色工具 (color)
 
 颜色处理和管理工具。
 
@@ -228,7 +240,7 @@ const darker = color.darken("#ff0000", 0.2);
 const alpha = color.alpha("#ff0000", 0.5);
 ```
 
-### 9. UnoCSS 预设 (uno-preset)
+### 8. UnoCSS 预设 (uno-preset)
 
 UnoCSS 的预设配置。
 
@@ -241,7 +253,7 @@ export default defineConfig({
 });
 ```
 
-### 10. 唯一 ID 生成 (nanoid)
+### 9. 唯一 ID 生成 (nanoid)
 
 生成唯一的标识符。
 
@@ -251,37 +263,184 @@ import { nanoid } from "@dylanjs/utils";
 const id = nanoid(); // 生成唯一ID
 ```
 
-### 11. Axios 封装
+### 10. Axios 封装
 
-基于 axios 的 HTTP 请求封装。
+基于 axios 的 HTTP 请求封装，支持请求重试、错误处理等功能。
 
 ```typescript
-import { axios } from "@dylanjs/utils";
+import { createRequest, createFlatRequest } from "@dylanjs/utils";
 
-// 使用方式类似 fetchRequest
-axios.get("/api/users").then((res) => {
-  console.log(res.data);
+// 创建请求实例
+const request = createRequest({
+  baseURL: "https://api.example.com",
+  timeout: 10000,
 });
+
+// 使用请求
+const response = await request({
+  url: "/api/users",
+  method: "GET",
+});
+
+// 扁平化请求（返回 { data, error } 格式）
+const flatRequest = createFlatRequest();
+const { data, error } = await flatRequest({
+  url: "/api/users",
+  method: "GET",
+});
+
+// 取消请求
+request.cancelRequest(requestId);
+request.cancelAllRequest();
 ```
 
-### 12. WebSocket 工具
+### 11. WebSocket 工具
 
-WebSocket 连接管理工具。
+WebSocket 连接管理工具，支持心跳检测、自动重连等功能。
 
 ```typescript
-import { websocket } from "@dylanjs/utils";
+import { WebSocketClient } from "@dylanjs/utils";
 
-const ws = new websocket("ws://localhost:8080");
-
-ws.on("open", () => {
-  console.log("连接已建立");
+const ws = new WebSocketClient("ws://localhost:8080", {
+  onConnected: (ws) => {
+    console.log("连接已建立");
+  },
+  onMessage: (ws, ev) => {
+    console.log("收到消息:", ev.data);
+  },
+  onDisconnected: (ws, ev) => {
+    console.log("连接已断开");
+  },
+  onError: (ws, ev) => {
+    console.log("连接错误:", ev);
+  },
+  heartbeat: {
+    message: "ping",
+    responseMessage: "pong",
+    interval: 30000,
+    pongTimeout: 5000,
+  },
+  autoReconnect: {
+    retries: 5,
+    delay: 2000,
+    onFailed: () => {
+      console.log("重连失败");
+    },
+  },
 });
 
-ws.on("message", (data) => {
-  console.log("收到消息:", data);
-});
-
+// 发送消息
 ws.send("Hello Server");
+
+// 手动关闭连接
+ws.close();
+
+// 重新连接
+ws.open();
+```
+
+### 12. 数组格式化 (array-format)
+
+数组处理工具函数。
+
+```typescript
+import { arrayToTreeArray } from "@dylanjs/utils";
+
+// 将一维数组转换为树形结构
+const list = [
+  { id: 1, name: "部门1", parentId: 0 },
+  { id: 2, name: "部门2", parentId: 0 },
+  { id: 3, name: "子部门1", parentId: 1 },
+  { id: 4, name: "子部门2", parentId: 1 },
+];
+
+const treeArray = arrayToTreeArray(list, "parentId", 0);
+// 结果：
+// [
+//   {
+//     id: 1,
+//     name: "部门1",
+//     parentId: 0,
+//     children: [
+//       { id: 3, name: "子部门1", parentId: 1, children: [] },
+//       { id: 4, name: "子部门2", parentId: 1, children: [] }
+//     ]
+//   },
+//   {
+//     id: 2,
+//     name: "部门2",
+//     parentId: 0,
+//     children: []
+//   }
+// ]
+```
+
+### 13. 数字格式化 (num-format)
+
+数字处理工具函数。
+
+```typescript
+import { numThousandthFormat, bigNumAdd, bigNumMult } from "@dylanjs/utils";
+
+// 数字千分位格式化
+const formatted = numThousandthFormat(1234567.89);
+console.log(formatted); // "1,234,567.89"
+
+// 大数相加（避免精度丢失）
+const sum = bigNumAdd(999999999999999999, 1);
+console.log(sum); // "1000000000000000000"
+
+// 大数相乘（避免精度丢失）
+const product = bigNumMult(999999999999999999, 2);
+console.log(product); // "1999999999999999998"
+```
+
+### 14. 对象格式化 (object-format)
+
+对象处理工具函数。
+
+```typescript
+import { objectflatten } from "@dylanjs/utils";
+
+// 嵌套对象扁平化
+const nestedObj = {
+  a: {
+    b: {
+      c: {
+        dd: "abcdd",
+      },
+    },
+    d: {
+      xx: "adxx",
+    },
+    e: "ae",
+  },
+};
+
+const flattened = objectflatten(nestedObj);
+console.log(flattened);
+// 结果：
+// {
+//   'a.b.c.dd': 'abcdd',
+//   'a.d.xx': 'adxx',
+//   'a.e': 'ae'
+// }
+```
+
+### 15. 字符串格式化 (string-format)
+
+字符串处理工具函数。
+
+```typescript
+import { maxChatNumTime } from "@dylanjs/utils";
+
+// 找出字符串中出现最多次数的字符及次数
+maxChatNumTime("hello world");
+// 输出：
+// 最多的字符是l
+// 出现的次数是3
+// 最多的字符是o
+// 出现的次数是2
 ```
 
 ## 类型支持
@@ -312,6 +471,16 @@ MIT License
 欢迎提交 Issue 和 Pull Request！
 
 ## 更新日志
+
+### v1.1.0
+
+- 新增数组格式化工具 (`array-format`)
+- 新增数字格式化工具 (`num-format`)
+- 新增对象格式化工具 (`object-format`)
+- 新增字符串格式化工具 (`string-format`)
+- 增强类型判断工具，新增更多类型检查函数
+- 完善 WebSocket 工具，支持心跳检测和自动重连
+- 完善 Axios 封装，支持请求重试和错误处理
 
 ### v1.0.0
 
