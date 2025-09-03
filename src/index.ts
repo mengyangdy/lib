@@ -10,3 +10,4 @@ export * from "./axios";
 export * from "./debounce";
 export * from "./websocket";
 export * from "./format";
+export * from './web'

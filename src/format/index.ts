@@ -2,3 +2,8 @@ export * from "./num-format";
 export * from "./object-format";
 export * from "./string-format"; 
 export * from './array-format'
+export * from './numeral-format'
+export * from './reg-format'
+export * from './date-format'
+export * from './function-format'
+export * from './color-format'

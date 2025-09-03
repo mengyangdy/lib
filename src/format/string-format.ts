@@ -1,4 +1,3 @@
-
 /**
  * 找出字符串出现最多次数的字符以及次数
  * 思路：
@@ -9,28 +8,56 @@
  * 5. 时间复杂度：O(n)
  * @param str 字符串
  */
-export function maxChatNumTime(str: string) {
-  const obj = {};
+/**
+ * 找出字符串中出现最多次数的字符及次数
+ * @param str 要分析的字符串
+ * @returns 返回包含最多字符和次数的对象数组
+ */
+export function maxChatNumTime(
+  str: string
+): Array<{ char: string; count: number }> {
+  const charCount: Record<string, number> = {};
+
+  // 统计每个字符的出现次数
   for (let i = 0; i < str.length; i++) {
     const char = str.charAt(i);
-    if (obj[char]) {
-      obj[char]++;
-    } else {
-      obj[char] = 1;
-    }
+    charCount[char] = (charCount[char] || 0) + 1;
   }
-  //统计出来最大值
-  let max = 0;
-  for (let key in obj) {
-    if (max < obj[key]) {
-      max = obj[key];
-    }
-  }
-  //拿最大值去对比
-  for (let key in obj) {
-    if (obj[key] === max) {
-      console.log("最多的字符是" + key);
-      console.log("出现的次数是" + max);
-    }
-  }
+
+  // 找出最大出现次数
+  const maxCount = Math.max(...Object.values(charCount));
+
+  // 找出所有出现次数最多的字符
+  const maxChars = Object.entries(charCount)
+    .filter(([, count]) => count === maxCount)
+    .map(([char, count]) => ({ char, count }));
+
+  return maxChars;
+}
+
+/**
+ * 将字符串首字母大写
+ * @param str 字符串
+ * @returns 首字母大写后的字符串
+ */
+export function capitalize(str: string) {
+  return str.charAt(0).toUpperCase() + str.slice(1);
+}
+
+/**
+ * 反转字符串
+ * @param str 字符串
+ * @returns 反转后的字符串
+ */
+export function reverseString(str: string) {
+  return str.split("").reverse().join("");
+}
+
+/**
+ * 判断字符串是否是回文
+ * @param str 字符串
+ * @returns 是否是回文
+ */
+export function isPalindrome(str: string) {
+  return str === str.split("").reverse().join("");
 }

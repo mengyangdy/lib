@@ -66,3 +66,8 @@ export const hasOwn = <T extends object, K extends keyof T>(
   val: T,
   key: K,
 ): key is K => Object.prototype.hasOwnProperty.call(val, key);
+
+/**
+ * 检查当前浏览器是不是IE
+ */
+export const isIE=!!(document as any).documentMode
