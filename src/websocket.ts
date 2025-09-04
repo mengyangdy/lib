@@ -6,6 +6,8 @@ export interface WebSocketClientOptions {
   onDisconnected?: (ws: WebSocket, ev: CloseEvent) => void;
   onError?: (ws: WebSocket, ev: Event) => void;
   onMessage?: (ws: WebSocket, ev: MessageEvent) => void;
+  onReconnecting?: (retryCount: number) => void;
+  onReconnected?: () => void;
   heartbeat?:
     | false
     | {
@@ -18,12 +20,13 @@ export interface WebSocketClientOptions {
     | false
     | {
         retries?: number | ((retries: number) => boolean); // default: ∞
-        delay?: number; // ms, default: 1000
+        delay?: number | ((retryCount: number) => number); // ms, default: 1000
         onFailed?: () => void;
       };
   immediate?: boolean; // default: true
   protocols?: string[];
   buffer?: boolean; // default: true
+  maxBufferSize?: number; // default: 100
 }
 
 export class WebSocketClient {
@@ -39,7 +42,17 @@ export class WebSocketClient {
 
   send(data: string | ArrayBuffer | Blob, useBuffer = true): boolean {
     if (!this.ws || this.status.value !== "OPEN") {
-      if (useBuffer && this.options.buffer !== false) this.buffered.push(data);
+      if (useBuffer && this.options.buffer !== false) {
+        // 检查缓冲区大小限制
+        const maxSize = this.options.maxBufferSize || 100;
+        if (this.buffered.length >= maxSize) {
+          console.warn(
+            `WebSocket buffer is full (${maxSize}), dropping oldest message`
+          );
+          this.buffered.shift();
+        }
+        this.buffered.push(data);
+      }
       return false;
     }
     this.flushBuffer();
@@ -57,6 +70,27 @@ export class WebSocketClient {
     this.explicitlyClosed = false;
     if (this.ws) this.doClose(false, 1000); // 内部关闭，不设explicitlyClosed
     this.init();
+  }
+
+  /** 销毁客户端，清理所有资源 */
+  destroy() {
+    this.explicitlyClosed = true;
+    this.stopRetry();
+    this.stopHeartbeat();
+    this.ws?.close(1000, "destroyed");
+    this.ws = undefined;
+    this.buffered = [];
+    this.status.value = "CLOSED";
+  }
+
+  /** 获取连接状态 */
+  get isConnected(): boolean {
+    return this.status.value === "OPEN";
+  }
+
+  /** 获取重连次数 */
+  get retryCount(): number {
+    return this.retries;
   }
 
   private ws?: WebSocket;
@@ -150,8 +184,14 @@ export class WebSocketClient {
   }
 
   private handleHeartbeatMsg(e: MessageEvent) {
-    if (!this.options.heartbeat) return false;
-    if (e.data === this.heartbeatExpect) {
+    if (!this.options.heartbeat || !this.heartbeatExpect) return false;
+
+    // 改进心跳消息比较，支持不同类型
+    const isHeartbeat = this.compareHeartbeatMessage(
+      e.data,
+      this.heartbeatExpect
+    );
+    if (isHeartbeat) {
       clearTimeout(this.pongTimer);
       this.pongTimer = undefined;
       return true;
@@ -159,12 +199,32 @@ export class WebSocketClient {
     return false;
   }
 
+  private compareHeartbeatMessage(
+    data: any,
+    expected: WebSocketHeartbeatMessage
+  ): boolean {
+    if (typeof data === typeof expected) {
+      return data === expected;
+    }
+
+    // 对于不同类型，尝试转换为字符串比较
+    if (data instanceof ArrayBuffer && typeof expected === "string") {
+      return new TextDecoder().decode(data) === expected;
+    }
+
+    if (typeof data === "string" && expected instanceof ArrayBuffer) {
+      return data === new TextDecoder().decode(expected);
+    }
+
+    return false;
+  }
+
   private maybeReconnect(ev: CloseEvent) {
     const ar = this.options.autoReconnect;
     if (!ar || this.explicitlyClosed) return;
 
-    // 心跳超时等异常关闭要重连
-    if (ev.code === 1000 && !this.explicitlyClosed) return;
+    // 修复：正常关闭且是手动关闭时不重连
+    if (ev.code === 1000 && this.explicitlyClosed) return;
 
     const { retries = -1, delay = 2000, onFailed } = ar;
     const shouldRetry =
@@ -174,11 +234,19 @@ export class WebSocketClient {
 
     if (shouldRetry) {
       this.retries++;
-      console.log(`第 ${this.retries} 次重连，等待 ${delay}ms...`);
+
+      // 支持动态延迟
+      const actualDelay =
+        typeof delay === "function" ? delay(this.retries) : delay;
+
+      this.options.onReconnecting?.(this.retries);
+      console.log(`第 ${this.retries} 次重连，等待 ${actualDelay}ms...`);
+
       this.retryTimer = setTimeout(() => {
         console.log("开始重连...");
         this.init();
-      }, delay);
+        this.options.onReconnected?.();
+      }, actualDelay);
     } else {
       console.log("重连失败，已达最大次数");
       onFailed?.();
