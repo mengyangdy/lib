@@ -1,6 +1,24 @@
 # Changelog
 
 
+## [v0.2.7](https://github.com/mengyangdy/lib/compare/v0.2.6...v0.2.7) (2025-09-04)
+
+### &nbsp;&nbsp;&nbsp;🚀 Features
+
+- **components**: ✨ 添加format函数 &nbsp;-&nbsp; by @mengyangdy [<samp>(6843c)</samp>](https://github.com/mengyangdy/lib/commit/6843c02)
+
+### &nbsp;&nbsp;&nbsp;📖 Documentation
+
+- **other**: 📝 添加change文件 &nbsp;-&nbsp; by @mengyangdy [<samp>(10c7f)</samp>](https://github.com/mengyangdy/lib/commit/10c7f31)
+
+### &nbsp;&nbsp;&nbsp;🎨 Styles
+
+- **projects**: 💄 将format重构近一个文件夹下 &nbsp;-&nbsp; by @mengyangdy [<samp>(8a771)</samp>](https://github.com/mengyangdy/lib/commit/8a7719d)
+
+### &nbsp;&nbsp;&nbsp;❤️ Contributors
+
+[![mengyangdy](https://github.com/mengyangdy.png?size=48)](https://github.com/mengyangdy)&nbsp;&nbsp;
+
 ## [v0.2.6](https://github.com/mengyangdy/lib/compare/undefined...v0.2.6) (2025-09-01)
 
 ### &nbsp;&nbsp;&nbsp;🚀 Features
