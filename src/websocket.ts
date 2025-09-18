@@ -193,7 +193,7 @@ export class WebSocketClient {
     );
     if (isHeartbeat) {
       clearTimeout(this.pongTimer);
-      this.pongTimer = undefined;
+      this.pongTimer = undefined; 
       return true;
     }
     return false;

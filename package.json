@@ -17,6 +17,10 @@
   "scripts": {
     "build": "tsdown",
     "typecheck": "tsc --noEmit --skipLibCheck",
+    "test": "vitest",
+    "test:run": "vitest run",
+    "test:ui": "vitest --ui",
+    "test:coverage": "vitest run --coverage",
     "cm": "git add . && dy git-commit -l=zh-cn",
     "publish-pkg": "npm publish --access public",
     "release": "dy release && pnpm build && pnpm publish-pkg"
@@ -26,12 +30,15 @@
     "@dylanjs/cli": "^1.0.4",
     "@types/node": "^22.15.3",
     "@types/qs": "^6.9.18",
+    "@vitest/ui": "^3.2.4",
+    "jsdom": "^26.1.0",
     "tsdown": "^0.12.9",
-    "typescript": "^5.8.3"
+    "typescript": "^5.8.3",
+    "vitest": "^3.2.4"
   },
   "dependencies": {
-    "@unocss/core": "^66.3.2",
-    "@unocss/preset-uno": "^66.3.2",
+    "@unocss/core": "^66.5.1",
+    "@unocss/preset-uno": "^66.5.1",
     "axios": "^1.9.0",
     "axios-retry": "^4.5.0",
     "colord": "^2.9.3",
