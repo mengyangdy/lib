@@ -78,26 +78,6 @@ export function randomIp() {
 }
 
 /**
- * 获取cookies
- * @returns
- */
-/**
- * 获取所有Cookie并转换为对象
- * @returns Cookie对象，键为Cookie名称，值为Cookie值
- */
-export function getCookie(): Record<string, string> {
-  return document.cookie
-    .split(";")
-    .map((item) => item.split("="))
-    .reduce((acc, [k, v]) => {
-      if (k && v) {
-        acc[k.trim().replace('"', "")] = v;
-      }
-      return acc;
-    }, {} as Record<string, string>);
-}
-
-/**
  * 强制等待
  * @param t 毫秒数
  * @returns
