@@ -1,6 +1,16 @@
 # Changelog
 
 
+## [v0.2.9](https://github.com/mengyangdy/lib/compare/v0.2.8...v0.2.9) (2025-09-18)
+
+### &nbsp;&nbsp;&nbsp;🐞 Bug Fixes
+
+- **components**: 🐛 去掉ie判断 &nbsp;-&nbsp; by @mengyangdy [<samp>(f62d7)</samp>](https://github.com/mengyangdy/lib/commit/f62d708)
+
+### &nbsp;&nbsp;&nbsp;❤️ Contributors
+
+[![mengyangdy](https://github.com/mengyangdy.png?size=48)](https://github.com/mengyangdy)&nbsp;&nbsp;
+
 ## [v0.2.8](https://github.com/mengyangdy/lib/compare/v0.2.7...v0.2.8) (2025-09-18)
 
 ### &nbsp;&nbsp;&nbsp;🚀 Features
