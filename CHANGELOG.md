@@ -1,6 +1,17 @@
 # Changelog
 
 
+## [v0.2.8](https://github.com/mengyangdy/lib/compare/v0.2.7...v0.2.8) (2025-09-18)
+
+### &nbsp;&nbsp;&nbsp;🚀 Features
+
+- **components**: ✨ ws更新功能 &nbsp;-&nbsp; by @mengyangdy [<samp>(8a3a1)</samp>](https://github.com/mengyangdy/lib/commit/8a3a1e6)
+- **projects**: ✨ unocss版本使用最新的 &nbsp;-&nbsp; by @mengyangdy [<samp>(28103)</samp>](https://github.com/mengyangdy/lib/commit/2810370)
+
+### &nbsp;&nbsp;&nbsp;❤️ Contributors
+
+[![mengyangdy](https://github.com/mengyangdy.png?size=48)](https://github.com/mengyangdy)&nbsp;&nbsp;
+
 ## [v0.2.7](https://github.com/mengyangdy/lib/compare/v0.2.6...v0.2.7) (2025-09-04)
 
 ### &nbsp;&nbsp;&nbsp;🚀 Features
